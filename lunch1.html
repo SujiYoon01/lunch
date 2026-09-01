@@ -1,1 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRBP 중식 식당 리스트</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --card:#ffffff; --ink:#2b2a28; --sub:#7a7670;
+    --accent:#c1502e; --accent-soft:#f4ded4; --line:#eae7e1; --good:#3f7a5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg); color:var(--ink); padding:16px 14px 60px;
+  }
+  h1{font-size:19px; margin:4px 0 2px;}
+  .sub{color:var(--sub); font-size:13px; margin-bottom:16px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .pick-card{background:linear-gradient(135deg,#c1502e,#e08a5f); color:#fff; text-align:center; padding:20px 14px;}
+  .pick-card h2{margin:0 0 6px; font-size:15px; font-weight:500; opacity:.9;}
+  .pick-name{font-size:24px; font-weight:700; margin:6px 0 4px;}
+  .pick-meta{font-size:13px; opacity:.9; margin-bottom:12px;}
+  button{
+    font-family:inherit; border:none; border-radius:10px; padding:10px 14px; font-size:14px;
+    cursor:pointer; font-weight:600;
+  }
+  .btn-white{background:#fff; color:var(--accent);}
+  .btn-primary{background:var(--accent); color:#fff; width:100%;}
+  .btn-ghost{background:var(--accent-soft); color:var(--accent);}
+  .btn-small{padding:6px 10px; font-size:12px; border-radius:8px;}
+  .btn-del{background:#f2eae7; color:#9c5142;}
+  .filters{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px;}
+  .chip{
+    flex:0 0 auto; padding:7px 12px; border-radius:999px; background:#fff; border:1px solid var(--line);
+    font-size:13px; color:var(--sub); cursor:pointer; white-space:nowrap;
+  }
+  .chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .item{display:flex; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .item:last-child{border-bottom:none;}
+  .item-name{font-size:15px; font-weight:700;}
+  .item-tag{display:inline-block; font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:6px; margin-left:6px; font-weight:600;}
+  .item-sub{font-size:12.5px; color:var(--sub); margin-top:3px;}
+  .item-actions{display:flex; flex-direction:column; gap:6px; align-items:flex-end;}
+  .stars{color:#e0a01f; font-size:13px;}
+  .form-row{display:flex; flex-direction:column; gap:8px; margin-bottom:10px;}
+  input, select, textarea{
+    padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px; font-family:inherit;
+    background:#fdfcfb; width:100%;
+  }
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .section-title{font-size:14px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px;}
+  .empty{text-align:center; color:var(--sub); font-size:13px; padding:20px 0;}
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#2b2a28; color:#fff;
+    padding:9px 16px; border-radius:10px; font-size:13px; opacity:0; transition:opacity .25s; pointer-events:none;
+  }
+  .toast.show{opacity:0.95;}
+  .note{font-size:11.5px; color:var(--sub); margin-top:14px; text-align:center;}
+</style>
+</head>
+<body>
 
+<h1>🍚 HRBP 중식 식당 리스트</h1>
+<div class="sub">경력직 입사자 중식 때 갈 식당 후보를 모아두고, 그날그날 골라보세요.</div>
+
+<div class="card pick-card">
+  <h2>오늘 점심 뭐 먹지?</h2>
+  <div id="pickResult">
+    <div class="pick-name">버튼을 눌러보세요</div>
+    <div class="pick-meta">최근에 안 간 곳 위주로 추천해드려요</div>
+  </div>
+  <button class="btn-white" onclick="pickRandom()">🎲 랜덤 추천</button>
+</div>
+
+<div class="card">
+  <div class="section-title">➕ 식당 추가</div>
+  <div class="form-row">
+    <input id="inName" placeholder="식당 이름 (예: 박지후스시)">
+    <div class="form-grid">
+      <select id="inCategory">
+        <option>한식</option><option>중식</option><option>일식</option>
+        <option>양식</option><option>고깃집</option><option>분식</option>
+        <option>카페/디저트</option><option>기타</option>
+      </select>
+      <select id="inRating">
+        <option value="5">★★★★★</option>
+        <option value="4" selected>★★★★☆</option>
+        <option value="3">★★★☆☆</option>
+        <option value="2">★★☆☆☆</option>
+        <option value="1">★☆☆☆☆</option>
+      </select>
+    </div>
+    <input id="inLocation" placeholder="위치/특징 (예: 을지로3가역 도보 5분)">
+    <textarea id="inMemo" placeholder="메모 (예: 룸 있음, 예약 필수 등)" rows="2"></textarea>
+  </div>
+  <button class="btn-primary" onclick="addRestaurant()">추가하기</button>
+</div>
+
+<div class="card">
+  <div class="section-title">📋 식당 목록 (<span id="countLabel">0</span>곳)</div>
+  <div class="filters" id="filterBar"></div>
+  <div id="listArea"></div>
+</div>
+
+<div class="note">이 목록은 팀원과 공유되는 저장소에 보관됩니다. 팀 내 다른 사람이 이 대시보드를 열면 같은 목록을 보고 편집할 수 있어요.</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS = ["전체","한식","중식","일식","양식","고깃집","분식","카페/디저트","기타"];
+let restaurants = [];
+let activeFilter = "전체";
+
+const SEED = [
+  {name:"박지후스시", category:"일식", location:"을지로3가 인근", rating:5, memo:"스시, 평점 높음", lastVisited:null, visitCount:0},
+  {name:"부자돈까스", category:"양식", location:"을지로3가 인근", rating:4, memo:"돈까스", lastVisited:null, visitCount:0},
+  {name:"부엌데기의김치찌개", category:"한식", location:"을지로3가 인근", rating:5, memo:"김치찌개", lastVisited:null, visitCount:0},
+  {name:"진중 우육면관", category:"중식", location:"을지로3가 인근", rating:5, memo:"우육면", lastVisited:null, visitCount:0},
+  {name:"산청숯불가든", category:"고깃집", location:"을지로3가 인근", rating:5, memo:"고깃집, 회식 겸용 가능", lastVisited:null, visitCount:0},
+  {name:"을지타이", category:"기타", location:"을지로3가 인근", rating:5, memo:"태국음식, 가성비 좋음", lastVisited:null, visitCount:0}
+];
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+async function loadData(){
+  try{
+    const res = await window.storage.get('hrbp-lunch-restaurants', true);
+    restaurants = res && res.value ? JSON.parse(res.value) : [];
+    if(restaurants.length === 0){
+      restaurants = SEED;
+      await saveData();
+      toast('근처 인기 식당으로 시작해봤어요');
+    }
+  }catch(e){
+    restaurants = SEED;
+  }
+  render();
+}
+
+async function saveData(){
+  try{
+    await window.storage.set('hrbp-lunch-restaurants', JSON.stringify(restaurants), true);
+  }catch(e){
+    toast('저장에 실패했어요. 다시 시도해주세요.');
+  }
+}
+
+function addRestaurant(){
+  const name = document.getElementById('inName').value.trim();
+  if(!name){ toast('식당 이름을 입력해주세요'); return; }
+  const category = document.getElementById('inCategory').value;
+  const rating = parseInt(document.getElementById('inRating').value);
+  const location = document.getElementById('inLocation').value.trim();
+  const memo = document.getElementById('inMemo').value.trim();
+  restaurants.push({name, category, location, rating, memo, lastVisited:null, visitCount:0});
+  saveData();
+  document.getElementById('inName').value='';
+  document.getElementById('inLocation').value='';
+  document.getElementById('inMemo').value='';
+  render();
+  toast(`${name} 추가 완료`);
+}
+
+function deleteRestaurant(idx){
+  const name = restaurants[idx].name;
+  restaurants.splice(idx,1);
+  saveData();
+  render();
+  toast(`${name} 삭제됨`);
+}
+
+function markVisited(idx){
+  restaurants[idx].lastVisited = new Date().toISOString().slice(0,10);
+  restaurants[idx].visitCount = (restaurants[idx].visitCount||0) + 1;
+  saveData();
+  render();
+  toast(`오늘 ${restaurants[idx].name} 다녀온 걸로 기록했어요`);
+}
+
+function daysSince(dateStr){
+  if(!dateStr) return Infinity;
+  const diff = (new Date() - new Date(dateStr)) / 86400000;
+  return diff;
+}
+
+function pickRandom(){
+  const pool = activeFilter === "전체" ? restaurants : restaurants.filter(r=>r.category===activeFilter);
+  if(pool.length === 0){ toast('해당 카테고리에 식당이 없어요'); return; }
+  // 최근 14일 이내 방문한 곳은 최대한 제외
+  let candidates = pool.filter(r => daysSince(r.lastVisited) >= 14);
+  if(candidates.length === 0) candidates = pool;
+  const pick = candidates[Math.floor(Math.random()*candidates.length)];
+  document.getElementById('pickResult').innerHTML = `
+    <div class="pick-name">${escapeHtml(pick.name)}</div>
+    <div class="pick-meta">${escapeHtml(pick.category)} · ${'★'.repeat(pick.rating)}${'☆'.repeat(5-pick.rating)} ${pick.location ? '· '+escapeHtml(pick.location):''}</div>
+  `;
+}
+
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function renderFilters(){
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = CATS.map(c=>`<div class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</div>`).join('');
+}
+
+function setFilter(c){ activeFilter = c; render(); }
+
+function render(){
+  renderFilters();
+  const list = activeFilter === "전체" ? restaurants : restaurants.filter(r=>r.category===activeFilter);
+  document.getElementById('countLabel').textContent = restaurants.length;
+  const area = document.getElementById('listArea');
+  if(list.length === 0){
+    area.innerHTML = `<div class="empty">아직 등록된 식당이 없어요. 위에서 추가해보세요.</div>`;
+    return;
+  }
+  // 최근 방문 오래된 순 정렬 (안 간 곳 먼저)
+  const sorted = [...list].sort((a,b)=> daysSince(b.lastVisited) - daysSince(a.lastVisited));
+  area.innerHTML = sorted.map(r=>{
+    const idx = restaurants.indexOf(r);
+    const visitedLabel = r.lastVisited ? `최근 방문 ${r.lastVisited}` : '아직 안 감';
+    return `
+    <div class="item">
+      <div>
+        <span class="item-name">${escapeHtml(r.name)}</span><span class="item-tag">${escapeHtml(r.category)}</span>
+        <div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        <div class="item-sub">${escapeHtml(r.location||'')}${r.memo? ' · '+escapeHtml(r.memo):''}</div>
+        <div class="item-sub">${visitedLabel} ${r.visitCount? `· 총 ${r.visitCount}회`:''}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-ghost btn-small" onclick="markVisited(${idx})">오늘 다녀옴</button>
+        <button class="btn-del btn-small" onclick="deleteRestaurant(${idx})">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
